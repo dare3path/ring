@@ -17,6 +17,8 @@
 //! [RFC 5958]: https://tools.ietf.org/html/rfc5958
 
 use crate::{ec, error, io::der};
+use zeroize::Zeroize;
+use crate::{trace_log, is_all_zeros};
 
 pub(crate) struct PublicKeyOptions {
     /// Should the wrong public key ASN.1 tagging used by early implementations
@@ -179,6 +181,32 @@ fn unwrap_key__<'a>(
 pub struct Document {
     bytes: [u8; ec::PKCS8_DOCUMENT_MAX_LEN],
     len: usize,
+}
+
+impl Zeroize for Document {
+    fn zeroize(&mut self) {
+        let slice = &mut self.bytes[..self.len];
+        #[cfg(feature = "trace_drop_and_zeroize")] {
+            let needs_zero = !is_all_zeros(slice);
+            trace_log!("!!!! before zeroize-ing Document, len: {}, needs_zero: {}", self.len, needs_zero);
+        }
+        slice.zeroize();
+        assert!(is_all_zeros(slice), "Document used bytes not zeroized");
+        let leftover = &self.bytes[self.len..];//empty [] slice, or leftover.
+        if !is_all_zeros(leftover) {
+            trace_log!("!!!! cont., zeroize-ing Document leftover, len: {}", leftover.len());
+            self.bytes.zeroize();
+            panic!("!!!! Document leftover bytes were non-zero, so, change the code to always zero the whole thing!");
+        }
+        trace_log!("!!!! after zeroize-ing Document");
+    }
+}
+
+impl Drop for Document {
+    fn drop(&mut self) {
+        trace_log!("Dropping Document, len: {}", self.len);
+        self.zeroize();
+    }
 }
 
 impl AsRef<[u8]> for Document {

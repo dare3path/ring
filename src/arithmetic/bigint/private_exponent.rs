@@ -16,10 +16,29 @@ use super::{limb, BoxedLimbs, Limb, Modulus};
 use crate::error;
 use alloc::boxed::Box;
 
+use crate::trace_log;
+use zeroize::Zeroize;
+
 pub struct PrivateExponent {
     // Unlike most `[Limb]` we deal with, these are stored most significant
     // word first.
     limbs: Box<[Limb]>,
+}
+
+impl Zeroize for PrivateExponent {
+    fn zeroize(&mut self) {
+        trace_log!("!!!! before zeroize-ing PrivateExponent");
+        self.limbs.zeroize();
+        trace_log!("!!!! after zeroized PrivateExponent");
+    }
+}
+
+impl Drop for PrivateExponent {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping PrivateExponent");
+        self.zeroize();
+        trace_log!("!!! after dropping PrivateExponent");
+    }
 }
 
 impl PrivateExponent {

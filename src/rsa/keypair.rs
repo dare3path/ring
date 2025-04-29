@@ -17,6 +17,9 @@ use super::{
     KeyPairComponents, PublicExponent, PublicKey, PublicKeyComponents, N,
 };
 
+use zeroize::Zeroize;
+use crate::trace_log;
+
 /// RSA PKCS#1 1.5 signatures.
 use crate::{
     arithmetic::{
@@ -38,6 +41,25 @@ pub struct KeyPair {
     qInv: bigint::Elem<P, R>,
     public: PublicKey,
 }
+
+impl Zeroize for KeyPair {
+    fn zeroize(&mut self) {
+        trace_log!("!!!! before zeroize-ing RSA KeyPair");
+        self.p.zeroize();
+        self.q.zeroize();
+        self.qInv.zeroize();
+        trace_log!("!!!! after zeroize-ing RSA KeyPair");
+    }
+}
+
+impl Drop for KeyPair {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping RSA KeyPair");
+        self.zeroize();
+        trace_log!("!!! after dropping RSA KeyPair");
+    }
+}
+
 
 derive_debug_via_field!(KeyPair, stringify!(RsaKeyPair), public);
 
@@ -451,6 +473,24 @@ struct PrivateCrtPrime<M> {
     modulus: bigint::OwnedModulus<M>,
     oneRRR: bigint::One<M, RRR>,
     exponent: bigint::PrivateExponent,
+}
+
+impl<M> Zeroize for PrivateCrtPrime<M> {
+    fn zeroize(&mut self) {
+        trace_log!("!!!! before zeroize-ing PrivateCrtPrime");
+        self.modulus.zeroize();
+        self.oneRRR.zeroize();
+        self.exponent.zeroize();
+        trace_log!("!!!! after zeroized PrivateCrtPrime");
+    }
+}
+
+impl<M> Drop for PrivateCrtPrime<M> {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping PrivateCrtPrime");
+        self.zeroize();
+        trace_log!("!!! after dropping PrivateCrtPrime");
+    }
 }
 
 impl<M> PrivateCrtPrime<M> {

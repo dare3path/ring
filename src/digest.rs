@@ -23,12 +23,13 @@ use self::{
     sha2::{SHA256_BLOCK_LEN, SHA512_BLOCK_LEN},
 };
 use crate::{
+    trace_log, is_all_zeros,
     bits::{BitLength, FromByteLen as _},
     cpu, debug, error,
     polyfill::{self, slice, sliceutil},
 };
 use core::num::Wrapping;
-
+use zeroize::Zeroize;
 pub(crate) use self::finish_error::FinishError;
 
 mod dynstate;
@@ -297,10 +298,31 @@ pub fn digest(algorithm: &'static Algorithm, data: &[u8]) -> Digest {
 /// A calculated digest value.
 ///
 /// Use [`Self::as_ref`] to get the value as a `&[u8]`.
-#[derive(Clone, Copy)]
+//#[derive(Clone, Copy)]
+#[derive(Clone)] //XXX: api change, not Copy anymore due to Drop
 pub struct Digest {
     value: Output,
     algorithm: &'static Algorithm,
+}
+
+impl Zeroize for Digest {
+    fn zeroize(&mut self) {
+        #[cfg(feature = "trace_drop_and_zeroize")] {
+            let needs_zero = !is_all_zeros(&self.value.0);
+            trace_log!("!!!! before zeroize-ing Digest, needs_zero: {}", needs_zero);
+        }
+        self.value.0.zeroize();
+        assert!(is_all_zeros(&self.value.0), "Digest not zeroized");
+        trace_log!("!!!! after zeroized Digest");
+    }
+}
+
+impl Drop for Digest {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping Digest");
+        self.zeroize();
+        trace_log!("!!! after dropping Digest");
+    }
 }
 
 impl Digest {

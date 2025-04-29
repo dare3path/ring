@@ -43,7 +43,9 @@ pub(crate) use self::{
     private_exponent::PrivateExponent,
 };
 use super::{inout::AliasingSlices3, limbs512, montgomery::*, LimbSliceError, MAX_LIMBS};
+use zeroize::Zeroize;
 use crate::{
+    trace_log,
     bits::BitLength,
     c,
     error::{self, LenMismatchError},
@@ -71,7 +73,7 @@ pub struct Storage<M> {
 
 impl<M, E> From<Elem<M, E>> for Storage<M> {
     fn from(elem: Elem<M, E>) -> Self {
-        Self { limbs: elem.limbs }
+        Self { limbs: elem.limbs.clone() }
     }
 }
 
@@ -87,6 +89,21 @@ pub struct Elem<M, E = Unencoded> {
     /// `value` to get the actual value.
     encoding: PhantomData<E>,
 }
+
+impl<M, E> Zeroize for Elem<M, E> {
+    fn zeroize(&mut self) {
+        self.limbs.zeroize();
+        trace_log!("!!!! Zeroized Elem");
+    }
+}
+
+impl<M, E> Drop for Elem<M, E> {
+    fn drop(&mut self) {
+        trace_log!("!!! Dropping Elem");
+        self.zeroize();
+    }
+}
+
 
 impl<M, E> Elem<M, E> {
     pub fn clone_into(&self, mut out: Storage<M>) -> Self {
@@ -191,7 +208,7 @@ where
     )
     .unwrap_or_else(unwrap_impossible_limb_slice_error);
     Elem {
-        limbs: b.limbs,
+        limbs: b.limbs.clone(),
         encoding: PhantomData,
     }
 }
@@ -259,7 +276,7 @@ where
     limbs_square_mont(&mut a.limbs, m.limbs(), m.n0(), m.cpu_features())
         .unwrap_or_else(unwrap_impossible_limb_slice_error);
     Elem {
-        limbs: a.limbs,
+        limbs: a.limbs.clone(),
         encoding: PhantomData,
     }
 }
@@ -313,6 +330,22 @@ pub fn elem_sub<M, E>(mut a: Elem<M, E>, b: &Elem<M, E>, m: &Modulus<M>) -> Elem
 
 // The value 1, Montgomery-encoded some number of times.
 pub struct One<M, E>(Elem<M, E>);
+
+impl<M, E> Zeroize for One<M, E> {
+    fn zeroize(&mut self) {
+        trace_log!("!!!! before zeroize-ing One");
+        self.0.zeroize(); // Delegates to Elem<M, E>
+        trace_log!("!!!! after zeroized One");
+    }
+}
+
+impl<M, E> Drop for One<M, E> {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping One");
+        self.zeroize();
+        trace_log!("!!! after dropping One");
+    }
+}
 
 impl<M> One<M, RR> {
     // Returns RR = = R**2 (mod n) where R = 2**r is the smallest power of
@@ -391,15 +424,62 @@ impl<M> One<M, RR> {
         }
 
         Self(Elem {
-            limbs: acc.limbs,
+            limbs: acc.limbs.clone(),
             encoding: PhantomData, // PhantomData<RR>
         })
     }
 }
 
 impl<M> One<M, RRR> {
-    pub(crate) fn newRRR(One(oneRR): One<M, RR>, m: &Modulus<M>) -> Self {
-        Self(elem_squared(oneRR, m))
+//    pub(crate) fn newRRR(One(ref oneRR): One<M, RR>, m: &Modulus<M>) -> Self
+//    where
+//        (RR, RR): ProductEncoding,
+//    {
+//        //Self(elem_squared((*oneRR).clone(), m))
+//        //FIXME: too convoluted?!
+//        trace_log!("!!!! before cloning Elem<M, RR> in newRRR");
+//        #[cfg(not(feature = "alloc"))]
+//        compile_error!("was expecting 'alloc' feature was used by this point.");
+//        let storage = Storage { limbs: BoxedLimbs(alloc::vec![0; m.limbs().len()].into_boxed_slice()) };
+//        let cloned = oneRR.clone_into(storage);
+//        let result = Self(elem_squared(cloned, m));
+//        trace_log!("!!!! after cloning Elem<M, RR> in newRRR");
+//        result
+//    }
+//    #[cfg(feature = "alloc")]
+//    pub(crate) fn newRRR(One(ref oneRR): One<M, RR>, m: &Modulus<M>) -> Self
+//    where
+//        (RR, RR): ProductEncoding,
+//    {
+//        let storage = Storage {
+//            limbs: BoxedLimbs {
+//                limbs: alloc::vec![0; m.limbs().len()].into_boxed_slice(),
+//                m: PhantomData,
+//            },
+//        };
+//        let cloned = oneRR.clone_into(storage);
+//        Self(elem_squared(cloned, m))
+//    }
+//
+//    #[cfg(not(feature = "alloc"))]
+//    pub(crate) fn newRRR(One(ref oneRR): One<M, RR>, m: &Modulus<M>) -> Self
+//    where
+//        (RR, RR): ProductEncoding,
+//    {
+//        panic!("newRRR requires alloc feature");
+//    }
+    #[cfg(feature = "alloc")]
+    pub(crate) fn newRRR(One(ref oneRR): One<M, RR>, m: &Modulus<M>) -> Self {
+        let storage = Storage {
+            limbs: BoxedLimbs::zero(m.limbs().len()),
+        };
+        let cloned = oneRR.clone_into(storage);
+        Self(elem_squared(cloned, m))
+    }
+
+    #[cfg(not(feature = "alloc"))]
+    pub(crate) fn newRRR(One(ref oneRR): One<M, RR>, m: &Modulus<M>) -> Self {
+        panic!("newRRR requires alloc feature");
     }
 }
 

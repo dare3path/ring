@@ -175,3 +175,31 @@ pub mod deprecated_test;
 #[allow(deprecated)]
 #[deprecated(note = "internal API that will be removed")]
 pub use deprecated_test as test;
+
+
+#[cfg(all(feature = "trace_drop_and_zeroize", feature = "std"))]
+extern crate std;
+
+#[macro_export]
+macro_rules! trace_log {
+    // just a newline
+    () => {
+        #[cfg(all(feature = "trace_drop_and_zeroize", feature = "std"))]
+        std::eprintln!();
+    };
+    // Single expression (e.g., string literal)
+    ($msg:expr) => {
+        #[cfg(all(feature = "trace_drop_and_zeroize", feature = "std"))]
+        std::eprintln!("{}", $msg);
+    };
+    // Variadic arguments (e.g., format string and values)
+    ($fmt:expr, $($arg:tt)*) => {
+        #[cfg(all(feature = "trace_drop_and_zeroize", feature = "std"))]
+        std::eprintln!($fmt, $($arg)*);
+    };
+}
+
+fn is_all_zeros(slice: &[u8]) -> bool {
+    slice.iter().all(|&b| b == 0) // also true if empty slice
+}
+

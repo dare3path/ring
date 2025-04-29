@@ -161,6 +161,7 @@ name = "ring"
 cfg-if = { version = "1.0.0", default-features = false }
 getrandom = { version = "0.2.10" }
 untrusted = { version = "0.9" }
+zeroize = { version = "1.8.1", features = ["alloc"] }
 
 [target.'cfg(all(any(all(target_arch = "aarch64", target_endian = "little"), all(target_arch = "arm", target_endian = "little")), any(target_os = "android", target_os = "linux")))'.dependencies]
 libc = { version = "0.2.148", default-features = false }
@@ -193,24 +194,29 @@ unstable-testing-arm-no-hw = []
 unstable-testing-arm-no-neon = []
 test_logging = []
 wasm32_unknown_unknown_js = ["getrandom/js"]
+trace_drop_and_zeroize = ["std", "alloc"]
+
 
 # XXX: debug = false because of https://github.com/rust-lang/rust/issues/34122
 
 [profile.bench]
 opt-level = 3
-debug = false
+debug = 1
 rpath = false
 lto = false
 debug-assertions = false
 codegen-units = 1
 overflow-checks = true
 
+[profile.dev]
+debug = 1 #keep size down
+
 [profile.release]
 opt-level = 3
-debug = false
+debug = 1
 rpath = false
 lto = true
-debug-assertions = false
+debug-assertions = true
 codegen-units = 1
 overflow-checks = true
 

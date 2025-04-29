@@ -17,16 +17,34 @@ use super::{
     BoxedLimbs, Modulus, PublicModulus,
 };
 use crate::{
+    trace_log,
     bits::BitLength,
     error,
     limb::{self, Limb, LIMB_BYTES},
 };
+use zeroize::Zeroize;
 
 /// `OwnedModulus`, without the overhead of Montgomery multiplication support.
 pub(crate) struct OwnedModulusValue<M> {
     limbs: BoxedLimbs<M>, // Also `value >= 3`.
 
     len_bits: BitLength,
+}
+
+impl<M> Zeroize for OwnedModulusValue<M> {
+    fn zeroize(&mut self) {
+        trace_log!("!!!! before zeroize-ing OwnedModulusValue");
+        self.limbs.zeroize();
+        trace_log!("!!!! after zeroized OwnedModulusValue");
+    }
+}
+
+impl<M> Drop for OwnedModulusValue<M> {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping OwnedModulusValue");
+        self.zeroize();
+        trace_log!("!!! after dropping OwnedModulusValue");
+    }
 }
 
 impl<M: PublicModulus> Clone for OwnedModulusValue<M> {

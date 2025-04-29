@@ -16,6 +16,7 @@ use crate::ec::suite_b::ops::{
     p256::NUM_LIMBS as P256_NUM_LIMBS, p384::NUM_LIMBS as P384_NUM_LIMBS,
 };
 use crate::{
+    trace_log,
     arithmetic::{
         limbs_from_hex,
         montgomery::{Encoding, ProductEncoding, Unencoded},
@@ -23,6 +24,7 @@ use crate::{
     limb::{LeakyLimb, Limb},
 };
 use core::marker::PhantomData;
+use zeroize::Zeroize;
 
 #[derive(Clone, Copy)]
 pub(super) enum NumLimbs {
@@ -43,7 +45,8 @@ impl NumLimbs {
 
 /// Elements of ℤ/mℤ for some modulus *m*. Elements are always fully reduced
 /// with respect to *m*; i.e. the 0 <= x < m for every value x.
-#[derive(Clone, Copy)]
+//#[derive(Clone, Copy)]
+#[derive(Clone)] //XXX: api change, not Copy due to Drop
 pub struct Elem<M, E: Encoding> {
     // XXX: pub
     pub(super) limbs: [Limb; NumLimbs::MAX],
@@ -54,6 +57,22 @@ pub struct Elem<M, E: Encoding> {
     /// The number of Montgomery factors that need to be canceled out from
     /// `value` to get the actual value.
     pub(super) encoding: PhantomData<E>,
+}
+
+impl<M, E: Encoding> Zeroize for Elem<M, E> {
+    fn zeroize(&mut self) {
+        trace_log!("!!!! before zeroize-ing ECDSA Elem");
+        self.limbs.zeroize();
+        trace_log!("!!!! after zeroized ECDSA Elem");
+    }
+}
+
+impl<M, E: Encoding> Drop for Elem<M, E> {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping ECDSA Elem");
+        self.zeroize();
+        trace_log!("!!! after dropping ECDSA Elem");
+    }
 }
 
 pub struct PublicElem<M, E: Encoding> {

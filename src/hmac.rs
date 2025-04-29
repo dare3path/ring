@@ -140,7 +140,8 @@ pub static HMAC_SHA512: Algorithm = Algorithm(&digest::SHA512);
 /// An HMAC tag.
 ///
 /// For a given tag `t`, use `t.as_ref()` to get the tag value as a byte slice.
-#[derive(Clone, Copy, Debug)]
+//#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)] // XXX: api change, not Copy anymore due to Drop in Digest
 pub struct Tag(Digest);
 
 impl AsRef<[u8]> for Tag {

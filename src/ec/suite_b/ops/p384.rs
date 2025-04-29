@@ -193,7 +193,7 @@ fn p384_scalar_inv_to_mont(a: Scalar<R>, _cpu: cpu::Features) -> Scalar<R> {
     const B_1111: usize = 7;
     const DIGIT_COUNT: usize = 8;
 
-    let mut d = [Scalar::zero(); DIGIT_COUNT];
+    let mut d: [_; DIGIT_COUNT] = core::array::from_fn::<_, DIGIT_COUNT,_>(|_| Scalar::zero());
     d[B_1] = a;
     let b_10 = sqr(&d[B_1]);
     for i in B_11..DIGIT_COUNT {

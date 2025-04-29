@@ -682,7 +682,7 @@ mod tests {
             let b = consume_elem(q, test_case, "b");
             let expected_sum = consume_elem(q, test_case, "r");
 
-            let mut actual_sum = a;
+            let mut actual_sum = a.clone();
             q.add_assign(&mut actual_sum, &b);
             assert_limbs_are_equal(cops, &actual_sum.limbs, &expected_sum.limbs);
 

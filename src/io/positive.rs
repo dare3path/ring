@@ -15,10 +15,30 @@
 //! Serialization and deserialization.
 
 use crate::error;
+use crate::trace_log;
+use zeroize::Zeroize;
 
 /// A serialized positive integer.
-#[derive(Copy, Clone)]
+//#[derive(Copy, Clone)]
+#[derive(Clone)] // XXX: api change, it's not Copy anymore due to Drop
 pub struct Positive<'a>(untrusted::Input<'a>);
+
+impl<'a> Zeroize for Positive<'a> {
+    fn zeroize(&mut self) {
+        // Positive wraps untrusted::Input, which is a &[u8] slice.
+        // Zeroizing the slice data is not possible since it's borrowed.
+        // No action needed, as Positive holds no owned sensitive data.
+        trace_log!("!!!! NOT zeroize-ing Positive (no-op, borrowed data)");
+    }
+}
+
+impl<'a> Drop for Positive<'a> {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping Positive");
+        self.zeroize();
+        trace_log!("!!! after dropping Positive");
+    }
+}
 
 impl<'a> Positive<'a> {
     #[inline]

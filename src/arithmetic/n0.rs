@@ -13,10 +13,29 @@
 // CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 use crate::limb::Limb;
+use crate::trace_log;
+use zeroize::Zeroize;
 
-#[derive(Clone, Copy)]
+//#[derive(Clone, Copy)]
+#[derive(Clone)] // XXX: api change, non-Copy due to Drop
 #[repr(transparent)]
 pub struct N0([Limb; 2]);
+
+impl Zeroize for N0 {
+    fn zeroize(&mut self) {
+        trace_log!("!!!! before zeroize-ing N0");
+        self.0.zeroize();
+        trace_log!("!!!! after zeroized N0");
+    }
+}
+
+impl Drop for N0 {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping N0");
+        self.zeroize();
+        trace_log!("!!! after dropping N0");
+    }
+}
 
 impl N0 {
     #[cfg(feature = "alloc")]

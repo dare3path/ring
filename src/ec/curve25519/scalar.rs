@@ -13,16 +13,43 @@
 // CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 use crate::{
+    trace_log,
     arithmetic::limbs_from_hex,
     digest, error, limb,
     polyfill::slice::{self, AsChunks},
 };
 use core::array;
 
+use zeroize::Zeroize;
+
 #[repr(transparent)]
 pub struct Scalar([u8; SCALAR_LEN]);
 
 pub const SCALAR_LEN: usize = 32;
+
+impl Zeroize for Scalar {
+    fn zeroize(&mut self) {
+//        let bytes = unsafe { std::slice::from_raw_parts(self.0.as_ptr() as *const u8, SCALAR_LIMBS * 4) };
+//        let needs_zero = !is_all_zeros(bytes);
+        #[cfg(feature = "trace_drop_and_zeroize")] {
+            let needs_zero = !crate::is_all_zeros(&self.0);
+            trace_log!("!!!! before zeroize-ing X25519 Scalar, needs zeroize: {}", needs_zero);
+        }
+        self.0.zeroize();
+        assert!(crate::is_all_zeros(&self.0), "X25519 Scalar not zeroized");
+        trace_log!("!!!! after zeroize-ing X25519 Scalar");
+//        trace_log!("Zeroized X25519 Scalar, needs_zero: {}", needs_zero);
+//        assert!(is_all_zeros(bytes), "X25519 Scalar not zeroized");
+    }
+}
+
+impl Drop for Scalar {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping X25519 Scalar");
+        self.zeroize();
+        trace_log!("!!! after dropping X25519 Scalar");
+    }
+}
 
 impl Scalar {
     // Constructs a `Scalar` from `bytes`, failing if `bytes` encodes a scalar
@@ -56,6 +83,26 @@ impl Scalar {
 
 #[repr(transparent)]
 pub struct MaskedScalar([u8; SCALAR_LEN]);
+
+impl Zeroize for MaskedScalar {
+    fn zeroize(&mut self) {
+        #[cfg(feature = "trace_drop_and_zeroize")] {
+            let needs_zero = !crate::is_all_zeros(&self.0);
+            trace_log!("!!!! before zeroized MaskedScalar, needs zeroize: {}", needs_zero);
+        }
+        self.0.zeroize();
+        assert!(crate::is_all_zeros(&self.0), "MaskedScalar not zeroized");
+        trace_log!("!!!! after zeroized MaskedScalar");
+    }
+}
+
+impl Drop for MaskedScalar {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping MaskedScalar");
+        self.zeroize();
+        trace_log!("!!! after dropping MaskedScalar");
+    }
+}
 
 impl MaskedScalar {
     pub fn from_bytes_masked(bytes: [u8; SCALAR_LEN]) -> Self {

@@ -1,6 +1,9 @@
 use super::{Curve, ELEM_MAX_BYTES, SEED_MAX_BYTES};
 use crate::{cpu, error, rand};
 
+use zeroize::Zeroize;
+use crate::{trace_log, is_all_zeros};
+
 pub struct KeyPair {
     seed: Seed,
     public_key: PublicKey,
@@ -26,6 +29,24 @@ impl KeyPair {
 pub struct Seed {
     bytes: [u8; SEED_MAX_BYTES],
     curve: &'static Curve,
+}
+
+impl Zeroize for Seed {
+    fn zeroize(&mut self) {
+        #[cfg(feature = "trace_drop_and_zeroize")] {
+            let needs_zero = !is_all_zeros(&self.bytes);
+            trace_log!("Zeroizing Seed, needs zeroize: {}", needs_zero);
+        }
+        self.bytes.zeroize();
+        assert!(is_all_zeros(&self.bytes), "Seed not zeroized");
+    }
+}
+
+impl Drop for Seed {
+    fn drop(&mut self) {
+        trace_log!("Dropping Seed");
+        self.zeroize();
+    }
 }
 
 impl Seed {

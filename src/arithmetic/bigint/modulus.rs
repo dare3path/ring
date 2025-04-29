@@ -17,12 +17,14 @@ use super::{
     OwnedModulusValue, PublicModulus, Storage, N0,
 };
 use crate::{
+    trace_log,
     bits::BitLength,
     cpu, error,
     limb::{self, Limb, LIMB_BITS},
     polyfill::LeadingZerosStripped,
 };
 use core::marker::PhantomData;
+use zeroize::Zeroize;
 
 /// The modulus *m* for a ring ℤ/mℤ, along with the precomputed values needed
 /// for efficient Montgomery multiplication modulo *m*. The value must be odd
@@ -69,11 +71,28 @@ pub struct OwnedModulus<M> {
     n0: N0,
 }
 
+impl<M> Zeroize for OwnedModulus<M> {
+    fn zeroize(&mut self) {
+        trace_log!("!!!! before zeroize-ing OwnedModulus");
+        self.inner.zeroize();
+        self.n0.zeroize();
+        trace_log!("!!!! after zeroized OwnedModulus");
+    }
+}
+
+impl<M> Drop for OwnedModulus<M> {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping OwnedModulus");
+        self.zeroize();
+        trace_log!("!!! after dropping OwnedModulus");
+    }
+}
+
 impl<M: PublicModulus> Clone for OwnedModulus<M> {
     fn clone(&self) -> Self {
         Self {
             inner: self.inner.clone(),
-            n0: self.n0,
+            n0: self.n0.clone(),
         }
     }
 }
@@ -116,7 +135,7 @@ impl<M> OwnedModulus<M> {
     pub(crate) fn modulus(&self, cpu_features: cpu::Features) -> Modulus<M> {
         Modulus {
             limbs: self.inner.limbs(),
-            n0: self.n0,
+            n0: self.n0.clone(),
             len_bits: self.len_bits(),
             m: PhantomData,
             cpu_features,
