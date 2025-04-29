@@ -1,11 +1,11 @@
 #!/usr/bin/bash
 
 set -xe
-cargo test
-cargo test --no-default-features
-cargo test --all-targets
-cargo test --no-default-features --all-targets
-cargo test --no-default-features --features='alloc'
-cargo test --all-features
-cargo test --all-targets --all-features
+time cargo test
+time cargo test --no-default-features
+time cargo test --all-targets
+time cargo test --no-default-features --all-targets
+time cargo test --no-default-features --features='alloc'
+time cargo test --all-features
+time cargo test --all-targets --all-features
 echo "!!! All tests done successfully."
