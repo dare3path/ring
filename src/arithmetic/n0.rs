@@ -21,6 +21,7 @@ use zeroize::Zeroize;
 #[repr(transparent)]
 pub struct N0([Limb; 2]);
 
+impl zeroize::ZeroizeOnDrop for N0 {} // Marker
 impl Zeroize for N0 {
     fn zeroize(&mut self) {
         trace_log!("!!!! before zeroize-ing N0");

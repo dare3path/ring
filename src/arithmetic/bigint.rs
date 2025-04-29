@@ -90,6 +90,7 @@ pub struct Elem<M, E = Unencoded> {
     encoding: PhantomData<E>,
 }
 
+impl<M, E> zeroize::ZeroizeOnDrop for Elem<M, E> {} // Marker
 impl<M, E> Zeroize for Elem<M, E> {
     fn zeroize(&mut self) {
         self.limbs.zeroize();
@@ -331,6 +332,7 @@ pub fn elem_sub<M, E>(mut a: Elem<M, E>, b: &Elem<M, E>, m: &Modulus<M>) -> Elem
 // The value 1, Montgomery-encoded some number of times.
 pub struct One<M, E>(Elem<M, E>);
 
+impl<M, E> zeroize::ZeroizeOnDrop for One<M, E> {} // Marker
 impl<M, E> Zeroize for One<M, E> {
     fn zeroize(&mut self) {
         trace_log!("!!!! before zeroize-ing One");

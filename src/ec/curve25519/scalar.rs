@@ -27,6 +27,7 @@ pub struct Scalar([u8; SCALAR_LEN]);
 
 pub const SCALAR_LEN: usize = 32;
 
+impl zeroize::ZeroizeOnDrop for Scalar {} // Marker
 impl Zeroize for Scalar {
     fn zeroize(&mut self) {
 //        let bytes = unsafe { std::slice::from_raw_parts(self.0.as_ptr() as *const u8, SCALAR_LIMBS * 4) };
@@ -84,6 +85,7 @@ impl Scalar {
 #[repr(transparent)]
 pub struct MaskedScalar([u8; SCALAR_LEN]);
 
+impl zeroize::ZeroizeOnDrop for MaskedScalar {} // Marker
 impl Zeroize for MaskedScalar {
     fn zeroize(&mut self) {
         #[cfg(feature = "trace_drop_and_zeroize")] {

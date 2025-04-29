@@ -25,6 +25,7 @@ pub struct PrivateExponent {
     limbs: Box<[Limb]>,
 }
 
+impl zeroize::ZeroizeOnDrop for PrivateExponent {} // Marker
 impl Zeroize for PrivateExponent {
     fn zeroize(&mut self) {
         trace_log!("!!!! before zeroize-ing PrivateExponent");

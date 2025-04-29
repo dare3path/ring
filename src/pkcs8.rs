@@ -183,6 +183,7 @@ pub struct Document {
     len: usize,
 }
 
+impl zeroize::ZeroizeOnDrop for Document {} // Marker
 impl Zeroize for Document {
     fn zeroize(&mut self) {
         let slice = &mut self.bytes[..self.len];

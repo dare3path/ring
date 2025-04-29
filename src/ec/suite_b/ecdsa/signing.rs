@@ -68,6 +68,7 @@ pub struct EcdsaKeyPair {
     public_key: PublicKey,
 }
 
+impl zeroize::ZeroizeOnDrop for EcdsaKeyPair {} // Marker
 impl Zeroize for EcdsaKeyPair {
     fn zeroize(&mut self) {
         trace_log!("!!!! before zeroize-ing EcdsaKeyPair");
@@ -367,12 +368,11 @@ impl sealed::Sealed for NonceRandom<'_> {}
 
 struct NonceRandomKey(digest::Digest);
 
+impl zeroize::ZeroizeOnDrop for NonceRandomKey {} // Marker
 impl Zeroize for NonceRandomKey {
     fn zeroize(&mut self) {
-//        let needs_zero = !is_all_zeros(&self.0);
-        trace_log!("!!!! before zeroize-ing NonceRandomKey"); //, needs zeroize: {}", needs_zero);
+        trace_log!("!!!! before zeroize-ing NonceRandomKey");
         self.0.zeroize();
-//        assert!(is_all_zeros(&self.0 .0), "NonceRandomKey not zeroized");
         trace_log!("!!!! after zeroize-ing NonceRandomKey");
     }
 }

@@ -71,6 +71,7 @@ pub struct OwnedModulus<M> {
     n0: N0,
 }
 
+impl<M> zeroize::ZeroizeOnDrop for OwnedModulus<M> {} // Marker
 impl<M> Zeroize for OwnedModulus<M> {
     fn zeroize(&mut self) {
         trace_log!("!!!! before zeroize-ing OwnedModulus");

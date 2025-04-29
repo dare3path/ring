@@ -42,6 +42,7 @@ pub struct KeyPair {
     public: PublicKey,
 }
 
+impl zeroize::ZeroizeOnDrop for KeyPair {} // Marker
 impl Zeroize for KeyPair {
     fn zeroize(&mut self) {
         trace_log!("!!!! before zeroize-ing RSA KeyPair");
@@ -475,6 +476,7 @@ struct PrivateCrtPrime<M> {
     exponent: bigint::PrivateExponent,
 }
 
+impl<M> zeroize::ZeroizeOnDrop for PrivateCrtPrime<M> {} // Marker
 impl<M> Zeroize for PrivateCrtPrime<M> {
     fn zeroize(&mut self) {
         trace_log!("!!!! before zeroize-ing PrivateCrtPrime");

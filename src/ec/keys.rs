@@ -31,6 +31,7 @@ pub struct Seed {
     curve: &'static Curve,
 }
 
+impl zeroize::ZeroizeOnDrop for Seed {} // Marker
 impl Zeroize for Seed {
     fn zeroize(&mut self) {
         #[cfg(feature = "trace_drop_and_zeroize")] {

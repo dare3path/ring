@@ -305,6 +305,7 @@ pub struct Digest {
     algorithm: &'static Algorithm,
 }
 
+impl zeroize::ZeroizeOnDrop for Digest {} // Marker
 impl Zeroize for Digest {
     fn zeroize(&mut self) {
         #[cfg(feature = "trace_drop_and_zeroize")] {

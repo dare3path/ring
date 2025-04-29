@@ -31,6 +31,7 @@ pub(crate) struct OwnedModulusValue<M> {
     len_bits: BitLength,
 }
 
+impl<M> zeroize::ZeroizeOnDrop for OwnedModulusValue<M> {} // Marker
 impl<M> Zeroize for OwnedModulusValue<M> {
     fn zeroize(&mut self) {
         trace_log!("!!!! before zeroize-ing OwnedModulusValue");
