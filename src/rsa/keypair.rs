@@ -724,4 +724,14 @@ mod tests {
             },
         );
     }
+
+    use super::{KeyPair, PrivateCrtPrime};
+    use zeroize::{Zeroize, ZeroizeOnDrop};
+
+    #[test]
+    fn test_zeroize_and_zeroize_on_drop() {
+        const fn assert_zeroize<T: Zeroize + ZeroizeOnDrop>() {}
+        assert_zeroize::<KeyPair>();
+        assert_zeroize::<PrivateCrtPrime<()>>();
+    }
 }

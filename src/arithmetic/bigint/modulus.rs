@@ -220,3 +220,15 @@ impl<M> Modulus<'_, M> {
         self.cpu_features
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::OwnedModulus;
+    use zeroize::{Zeroize, ZeroizeOnDrop};
+
+    #[test]
+    fn test_zeroize_and_zeroize_on_drop() {
+        const fn assert_zeroize<T: Zeroize + ZeroizeOnDrop>() {}
+        assert_zeroize::<OwnedModulus<()>>();
+    }
+}

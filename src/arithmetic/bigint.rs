@@ -1147,4 +1147,14 @@ mod tests {
         let oneRR = One::newRR(out, m);
         elem_mul(oneRR.as_ref(), a, m)
     }
+
+    use super::{Elem, One, Unencoded};
+    use zeroize::{Zeroize, ZeroizeOnDrop};
+
+    #[test]
+    fn test_zeroize_and_zeroize_on_drop() {
+        const fn assert_zeroize<T: Zeroize + ZeroizeOnDrop>() {}
+        assert_zeroize::<Elem<(), Unencoded>>();
+        assert_zeroize::<One<(), Unencoded>>();
+    }
 }

@@ -243,3 +243,15 @@ fn wrap_key_(template: &Template, private_key: &[u8], public_key: &[u8], bytes: 
         .copy_from_slice(after_private_key);
     bytes[(private_key_end_index + after_private_key.len())..].copy_from_slice(public_key);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Document;
+    use zeroize::{Zeroize, ZeroizeOnDrop};
+
+    #[test]
+    fn test_zeroize_and_zeroize_on_drop() {
+        const fn assert_zeroize<T: Zeroize + ZeroizeOnDrop>() {}
+        assert_zeroize::<Document>();
+    }
+}

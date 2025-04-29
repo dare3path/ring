@@ -125,3 +125,16 @@ impl From<MaskedScalar> for Scalar {
 
 type UnreducedScalar = [u8; UNREDUCED_SCALAR_LEN];
 const UNREDUCED_SCALAR_LEN: usize = SCALAR_LEN * 2;
+
+#[cfg(test)]
+mod tests {
+    use super::{Scalar, MaskedScalar};
+    use zeroize::{Zeroize, ZeroizeOnDrop};
+
+    #[test]
+    fn test_zeroize_and_zeroize_on_drop() {
+        const fn assert_zeroize<T: Zeroize + ZeroizeOnDrop>() {}
+        assert_zeroize::<Scalar>();
+        assert_zeroize::<MaskedScalar>();
+    }
+}

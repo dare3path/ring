@@ -55,3 +55,15 @@ impl N0 {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::N0;
+    use zeroize::{Zeroize, ZeroizeOnDrop};
+
+    #[test]
+    fn test_zeroize_and_zeroize_on_drop() {
+        const fn assert_zeroize<T: Zeroize + ZeroizeOnDrop>() {}
+        assert_zeroize::<N0>();
+    }
+}

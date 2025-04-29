@@ -652,4 +652,14 @@ mod tests {
             },
         );
     }
+
+    use super::{EcdsaKeyPair, NonceRandomKey};
+    use zeroize::{Zeroize, ZeroizeOnDrop};
+
+    #[test]
+    fn test_zeroize_and_zeroize_on_drop() {
+        const fn assert_zeroize<T: Zeroize + ZeroizeOnDrop>() {}
+        assert_zeroize::<EcdsaKeyPair>();
+        assert_zeroize::<NonceRandomKey>();
+    }
 }

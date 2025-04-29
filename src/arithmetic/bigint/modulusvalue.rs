@@ -105,3 +105,15 @@ impl<M> OwnedModulusValue<M> {
         &self.limbs
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::OwnedModulusValue;
+    use zeroize::{Zeroize, ZeroizeOnDrop};
+
+    #[test]
+    fn test_zeroize_and_zeroize_on_drop() {
+        const fn assert_zeroize<T: Zeroize + ZeroizeOnDrop>() {}
+        assert_zeroize::<OwnedModulusValue<()>>();
+    }
+}

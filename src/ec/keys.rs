@@ -117,3 +117,15 @@ impl AsRef<[u8]> for PublicKey {
 
 /// The maximum length, in bytes, of an encoded public key.
 pub const PUBLIC_KEY_MAX_LEN: usize = 1 + (2 * ELEM_MAX_BYTES);
+
+#[cfg(test)]
+mod tests {
+    use super::Seed;
+    use zeroize::{Zeroize, ZeroizeOnDrop};
+
+    #[test]
+    fn test_zeroize_and_zeroize_on_drop() {
+        const fn assert_zeroize<T: Zeroize + ZeroizeOnDrop>() {}
+        assert_zeroize::<Seed>();
+    }
+}

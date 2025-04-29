@@ -700,4 +700,13 @@ mod tests {
         max_input_tests!(SHA384);
         max_input_tests!(SHA512);
     }
+
+    use super::Digest;
+    use zeroize::{Zeroize, ZeroizeOnDrop};
+
+    #[test]
+    fn test_zeroize_and_zeroize_on_drop() {
+        const fn assert_zeroize<T: Zeroize + ZeroizeOnDrop>() {}
+        assert_zeroize::<Digest>();
+    }
 }
