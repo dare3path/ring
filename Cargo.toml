@@ -161,7 +161,7 @@ name = "ring"
 cfg-if = { version = "1.0.0", default-features = false }
 getrandom = { version = "0.2.10" }
 untrusted = { version = "0.9" }
-zeroize = { version = "1.8.1", features = ["alloc"] }
+zeroize = { version = "1.8.1", default-features=false, optional=false }
 
 [target.'cfg(all(any(all(target_arch = "aarch64", target_endian = "little"), all(target_arch = "arm", target_endian = "little")), any(target_os = "android", target_os = "linux")))'.dependencies]
 libc = { version = "0.2.148", default-features = false }
@@ -184,7 +184,7 @@ cc = { version = "1.2.8", default-features = false }
 [features]
 # These features are documented in the top-level module's documentation.
 default = ["alloc", "dev_urandom_fallback"]
-alloc = []
+alloc = ["zeroize/alloc"]
 dev_urandom_fallback = []
 less-safe-getrandom-custom-or-rdrand = []
 less-safe-getrandom-espidf = []
