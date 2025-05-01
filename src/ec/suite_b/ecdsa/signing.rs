@@ -288,6 +288,7 @@ impl EcdsaKeyPair {
             // Step 5.
             // "No part of the digest_scalar call chain modifies h or its value: Output."
             // "Yes, h is read-only in sign_digest’s step 5."
+            #[allow(clippy::needless_borrow)]
             let e = digest_scalar(n, &h);
 
             // Step 6.
