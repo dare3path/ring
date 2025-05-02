@@ -433,43 +433,6 @@ impl<M> One<M, RR> {
 }
 
 impl<M> One<M, RRR> {
-//    pub(crate) fn newRRR(One(ref oneRR): One<M, RR>, m: &Modulus<M>) -> Self
-//    where
-//        (RR, RR): ProductEncoding,
-//    {
-//        //Self(elem_squared((*oneRR).clone(), m))
-//        //FIXME: too convoluted?!
-//        trace_log!("!!!! before cloning Elem<M, RR> in newRRR");
-//        #[cfg(not(feature = "alloc"))]
-//        compile_error!("was expecting 'alloc' feature was used by this point.");
-//        let storage = Storage { limbs: BoxedLimbs(alloc::vec![0; m.limbs().len()].into_boxed_slice()) };
-//        let cloned = oneRR.clone_into(storage);
-//        let result = Self(elem_squared(cloned, m));
-//        trace_log!("!!!! after cloning Elem<M, RR> in newRRR");
-//        result
-//    }
-//    #[cfg(feature = "alloc")]
-//    pub(crate) fn newRRR(One(ref oneRR): One<M, RR>, m: &Modulus<M>) -> Self
-//    where
-//        (RR, RR): ProductEncoding,
-//    {
-//        let storage = Storage {
-//            limbs: BoxedLimbs {
-//                limbs: alloc::vec![0; m.limbs().len()].into_boxed_slice(),
-//                m: PhantomData,
-//            },
-//        };
-//        let cloned = oneRR.clone_into(storage);
-//        Self(elem_squared(cloned, m))
-//    }
-//
-//    #[cfg(not(feature = "alloc"))]
-//    pub(crate) fn newRRR(One(ref oneRR): One<M, RR>, m: &Modulus<M>) -> Self
-//    where
-//        (RR, RR): ProductEncoding,
-//    {
-//        panic!("newRRR requires alloc feature");
-//    }
     #[cfg(feature = "alloc")]
     pub(crate) fn newRRR(One(ref oneRR): One<M, RR>, m: &Modulus<M>) -> Self {
         let storage = Storage {
