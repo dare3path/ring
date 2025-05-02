@@ -21,21 +21,42 @@ use crate::{
     limb::{Limb, LIMB_BITS},
 };
 use core::{ffi::c_int, marker::PhantomData};
+use zeroize::Zeroize;
+use crate::trace_log;
 
 // Elem<T>` is `fe` in curve25519/internal.h.
 // Elem<L> is `fe_loose` in curve25519/internal.h.
 // Keep this in sync with curve25519/internal.h.
 #[repr(C)]
+#[derive(Clone)] // Added Clone
 pub struct Elem<E: Encoding> {
     limbs: [Limb; ELEM_LIMBS], // This is called `v` in the C code.
     encoding: PhantomData<E>,
 }
 
 pub trait Encoding {}
+#[derive(Clone)] // Added Clone
 pub struct T;
 impl Encoding for T {}
 
 const ELEM_LIMBS: usize = 5 * 64 / LIMB_BITS;
+
+impl<E: Encoding> zeroize::ZeroizeOnDrop for Elem<E> {}
+impl<E: Encoding> Zeroize for Elem<E> {
+    fn zeroize(&mut self) {
+        trace_log!("!!!! before zeroize-ing Curve25519 Elem");
+        self.limbs.zeroize();
+        trace_log!("!!!! after zeroize-ing Curve25519 Elem");
+    }
+}
+
+impl<E: Encoding> Drop for Elem<E> {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping Curve25519 Elem");
+        self.zeroize();
+        trace_log!("!!! after dropping Curve25519 Elem");
+    }
+}
 
 impl<E: Encoding> Elem<E> {
     fn zero() -> Self {
@@ -72,6 +93,26 @@ pub struct ExtPoint {
     t: Elem<T>,
 }
 
+impl zeroize::ZeroizeOnDrop for ExtPoint {}
+impl Zeroize for ExtPoint {
+    fn zeroize(&mut self) {
+        trace_log!("!!!! before zeroize-ing Curve25519 ExtPoint");
+        self.x.zeroize();
+        self.y.zeroize();
+        self.z.zeroize();
+        self.t.zeroize();
+        trace_log!("!!!! after zeroize-ing Curve25519 ExtPoint");
+    }
+}
+
+impl Drop for ExtPoint {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping Curve25519 ExtPoint");
+        self.zeroize();
+        trace_log!("!!! after dropping Curve25519 ExtPoint");
+    }
+}
+
 impl ExtPoint {
     // Returns the result of multiplying the base point by the scalar in constant time.
     pub(super) fn from_scalarmult_base(scalar: &Scalar, cpu: cpu::Features) -> Self {
@@ -102,7 +143,7 @@ impl ExtPoint {
     }
 
     pub(super) fn into_encoded_point(self, cpu_features: cpu::Features) -> EncodedPoint {
-        encode_point(self.x, self.y, self.z, cpu_features)
+        encode_point(self.x.clone(), self.y.clone(), self.z.clone(), cpu_features)
     }
 
     pub(super) fn invert_vartime(&mut self) {
@@ -119,6 +160,25 @@ pub struct Point {
     z: Elem<T>,
 }
 
+impl zeroize::ZeroizeOnDrop for Point {}
+impl Zeroize for Point {
+    fn zeroize(&mut self) {
+        trace_log!("!!!! before zeroize-ing Curve25519 Point");
+        self.x.zeroize();
+        self.y.zeroize();
+        self.z.zeroize();
+        trace_log!("!!!! after zeroize-ing Curve25519 Point");
+    }
+}
+
+impl Drop for Point {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping Curve25519 Point");
+        self.zeroize();
+        trace_log!("!!! after dropping Curve25519 Point");
+    }
+}
+
 impl Point {
     pub fn new_at_infinity() -> Self {
         Self {
@@ -129,7 +189,7 @@ impl Point {
     }
 
     pub(super) fn into_encoded_point(self, cpu_features: cpu::Features) -> EncodedPoint {
-        encode_point(self.x, self.y, self.z, cpu_features)
+        encode_point(self.x.clone(), self.y.clone(), self.z.clone(), cpu_features)
     }
 }
 
@@ -178,3 +238,18 @@ prefixed_extern! {
     fn x25519_fe_tobytes(bytes: &mut EncodedPoint, elem: &Elem<T>);
     fn x25519_ge_frombytes_vartime(h: &mut ExtPoint, s: &EncodedPoint) -> bssl::Result;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Elem, ExtPoint, Point, T};
+    use zeroize::{Zeroize, ZeroizeOnDrop};
+
+    #[test]
+    fn test_zeroize_and_zeroize_on_drop() {
+        const fn assert_zeroize<T: Zeroize + ZeroizeOnDrop>() {}
+        assert_zeroize::<Elem<T>>();
+        assert_zeroize::<ExtPoint>();
+        assert_zeroize::<Point>();
+    }
+}
+

@@ -22,6 +22,9 @@ use crate::{
     signature::{self, KeyPair as SigningKeyPair},
 };
 
+use zeroize::Zeroize;
+use crate::trace_log;
+
 /// An Ed25519 key pair, for signing.
 pub struct Ed25519KeyPair {
     // RFC 8032 Section 5.1.6 calls this *s*.
@@ -35,6 +38,25 @@ pub struct Ed25519KeyPair {
 }
 
 derive_debug_via_field!(Ed25519KeyPair, stringify!(Ed25519KeyPair), public_key);
+
+impl zeroize::ZeroizeOnDrop for Ed25519KeyPair {}
+impl Zeroize for Ed25519KeyPair {
+    fn zeroize(&mut self) {
+        trace_log!("!!!! before zeroize-ing Ed25519KeyPair");
+        self.private_scalar.zeroize();
+        self.private_prefix.zeroize();
+        //self.public_key.zeroize();
+        trace_log!("!!!! after zeroize-ing Ed25519KeyPair");
+    }
+}
+
+impl Drop for Ed25519KeyPair {
+    fn drop(&mut self) {
+        trace_log!("!!! before dropping Ed25519KeyPair");
+        self.zeroize();
+        trace_log!("!!! after dropping Ed25519KeyPair");
+    }
+}
 
 impl Ed25519KeyPair {
     /// Generates a new key pair and returns the key pair serialized as a
@@ -273,3 +295,19 @@ static PKCS8_TEMPLATE: pkcs8::Template = pkcs8::Template {
     curve_id_index: 0,
     private_key_index: 0x10,
 };
+
+#[cfg(test)]
+mod tests {
+    use super::Ed25519KeyPair;
+    use zeroize::{Zeroize, ZeroizeOnDrop};
+
+    #[test]
+    fn test_zeroize_and_zeroize_on_drop() {
+        const fn assert_zeroize<T: Zeroize + ZeroizeOnDrop>() {}
+        assert_zeroize::<Ed25519KeyPair>();
+        //assert_zeroize::<PublicKey>();
+        //assert_zeroize::<Prefix>();
+        //assert_zeroize::<Seed>();
+    }
+}
+
