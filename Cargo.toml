@@ -196,8 +196,8 @@ test_logging = []
 wasm32_unknown_unknown_js = ["getrandom/js"]
 trace_drop_and_zeroize = ["std", "alloc"]
 #XXX: using 'my_fork' feature in dependents(those that depend on this crate) allows for toggling the trace from here while also ensuring the dependents don't accidentally use an upstream non-forked version of this crate.
-my_fork=["trace_drop_and_zeroize"]
-#my_fork=[]
+#my_fork=["trace_drop_and_zeroize"]
+my_fork=[]
 
 
 # XXX: debug = false because of https://github.com/rust-lang/rust/issues/34122
