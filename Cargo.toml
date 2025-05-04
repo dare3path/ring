@@ -212,7 +212,15 @@ codegen-units = 1
 overflow-checks = true
 
 [profile.dev]
+opt-level = 0
 debug = 1 #keep size down
+debug-assertions = true
+overflow-checks = true
+lto = false
+panic = 'unwind'
+incremental = true
+codegen-units = 256
+rpath = false
 
 [profile.release]
 opt-level = 3
